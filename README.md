@@ -4,7 +4,7 @@
 
 A beautiful, modern web tool for creating and managing cron jobs without memorizing the syntax. Perfect for developers, system administrators, and anyone who works with scheduled tasks on Linux.
 
-**[Live Demo →](https://lemii897.github.io/croncraft/)**
+**[Live Demo →](https://lemi897.github.io/croncraft/)**
 
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 ![Made with Love](https://img.shields.io/badge/made%20with-%E2%9D%A4-red.svg)
