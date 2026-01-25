@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CronCraft - Visual Cron Job Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e27;
+            --bg-secondary: #131935;
+            --bg-card: #1a1f3a;
+            --accent: #00ff88;
+            --accent-dim: #00cc6a;
+            --text: #e0e7ff;
+            --text-dim: #8b95c9;
+            --border: #2d3454;
+            --error: #ff4d6d;
+            --warning: #ffb627;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 136, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent) 0%, #00ccff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .tagline {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2::before {
+            content: '>';
+            color: var(--accent-dim);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        .time-input {
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .helper {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 0.4rem;
+            font-style: italic;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-preset {
+            padding: 0.6rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-preset:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent);
+        }
+
+        .output-section {
+            grid-column: 1 / -1;
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .cron-output {
+            background: var(--bg);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cron-output::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            to { left: 100%; }
+        }
+
+        .description {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dim);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .examples {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        .examples h3 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .example-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .example-item:hover {
+            background: rgba(0, 255, 136, 0.05);
+            transform: translateX(5px);
+        }
+
+        .example-cron {
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .example-desc {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            animation: fadeIn 0.8s ease-out 0.8s both;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: var(--warning);
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .time-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .preset-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CronCraft</h1>
+            <p class="tagline">Build cron schedules visually. No more syntax headaches.</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Quick Presets</h2>
+                <div class="preset-buttons">
+                    <button class="btn-preset" onclick="setPreset('* * * * *')">Every Minute</button>
+                    <button class="btn-preset" onclick="setPreset('0 * * * *')">Every Hour</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 * * *')">Daily at Midnight</button>
+                    <button class="btn-preset" onclick="setPreset('0 9 * * *')">Daily at 9 AM</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 * * 0')">Weekly (Sunday)</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 1 * *')">Monthly (1st)</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Time Fields</h2>
+                <div class="input-group">
+                    <label>Cron Expression</label>
+                    <div class="time-grid">
+                        <div>
+                            <input type="text" id="minute" class="time-input" placeholder="*" maxlength="2">
+                            <div class="helper">Min (0-59)</div>
+                        </div>
+                        <div>
+                            <input type="text" id="hour" class="time-input" placeholder="*" maxlength="2">
+                            <div class="helper">Hour (0-23)</div>
+                        </div>
+                        <div>
+                            <input type="text" id="day" class="time-input" placeholder="*" maxlength="2">
+                            <div class="helper">Day (1-31)</div>
+                        </div>
+                        <div>
+                            <input type="text" id="month" class="time-input" placeholder="*" maxlength="2">
+                            <div class="helper">Month (1-12)</div>
+                        </div>
+                        <div>
+                            <input type="text" id="weekday" class="time-input" placeholder="*" maxlength="1">
+                            <div class="helper">Day (0-7)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Command</h2>
+                <div class="input-group">
+                    <label>Command to Run</label>
+                    <input type="text" id="command" placeholder="/usr/bin/backup.sh" value="/usr/bin/backup.sh">
+                    <div class="helper">Full path to script or command</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Advanced Options</h2>
+                <div class="input-group">
+                    <label>Output Redirect (Optional)</label>
+                    <select id="output">
+                        <option value="">No redirect</option>
+                        <option value=" >> /var/log/cron.log 2>&1">Append to log file</option>
+                        <option value=" > /dev/null 2>&1">Discard output</option>
+                        <option value=" 2>&1 | tee -a /var/log/cron.log">Both log and display</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="output-section card">
+                <h2>Your Cron Job</h2>
+                <div class="cron-output" id="cronOutput">* * * * * /usr/bin/backup.sh</div>
+                <div class="description" id="cronDescription">Runs every minute</div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="copyCron()">Copy to Clipboard</button>
+                    <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3>Common Examples (Click to Load)</h3>
+            <div class="example-item" onclick="loadExample('0 2 * * *', '/usr/bin/backup.sh')">
+                <div class="example-cron">0 2 * * * /usr/bin/backup.sh</div>
+                <div class="example-desc">Daily backup at 2 AM</div>
+            </div>
+            <div class="example-item" onclick="loadExample('*/15 * * * *', '/usr/bin/check_disk.sh')">
+                <div class="example-cron">*/15 * * * * /usr/bin/check_disk.sh</div>
+                <div class="example-desc">Check disk space every 15 minutes</div>
+            </div>
+            <div class="example-item" onclick="loadExample('0 0 * * 1', '/usr/bin/weekly_report.sh')">
+                <div class="example-cron">0 0 * * 1 /usr/bin/weekly_report.sh</div>
+                <div class="example-desc">Weekly report every Monday at midnight</div>
+            </div>
+            <div class="example-item" onclick="loadExample('30 3 1 * *', '/usr/bin/monthly_cleanup.sh')">
+                <div class="example-cron">30 3 1 * * /usr/bin/monthly_cleanup.sh</div>
+                <div class="example-desc">Monthly cleanup on the 1st at 3:30 AM</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Made for the Linux community ❤️ | <a href="https://github.com" target="_blank">Star on GitHub</a></p>
+            <p style="margin-top: 1rem; font-size: 0.8rem;">Tip: Use * for "every", */N for "every N units", or specific numbers</p>
+        </footer>
+    </div>
+
+    <script>
+        function updateCron() {
+            const minute = document.getElementById('minute').value || '*';
+            const hour = document.getElementById('hour').value || '*';
+            const day = document.getElementById('day').value || '*';
+            const month = document.getElementById('month').value || '*';
+            const weekday = document.getElementById('weekday').value || '*';
+            const command = document.getElementById('command').value || '/usr/bin/backup.sh';
+            const output = document.getElementById('output').value;
+
+            const cronExpression = `${minute} ${hour} ${day} ${month} ${weekday} ${command}${output}`;
+            document.getElementById('cronOutput').textContent = cronExpression;
+
+            const description = generateDescription(minute, hour, day, month, weekday);
+            document.getElementById('cronDescription').textContent = description;
+        }
+
+        function generateDescription(min, hr, d, mon, wd) {
+            let parts = [];
+
+            // Minute
+            if (min === '*') parts.push('every minute');
+            else if (min.startsWith('*/')) parts.push(`every ${min.slice(2)} minutes`);
+            else parts.push(`at minute ${min}`);
+
+            // Hour
+            if (hr !== '*') {
+                if (hr.startsWith('*/')) parts.push(`every ${hr.slice(2)} hours`);
+                else parts.push(`at ${hr}:00`);
+            }
+
+            // Day
+            if (d !== '*') {
+                parts.push(`on day ${d} of the month`);
+            }
+
+            // Month
+            if (mon !== '*') {
+                const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+                parts.push(`in ${months[parseInt(mon)]}`);
+            }
+
+            // Weekday
+            if (wd !== '*') {
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                parts.push(`on ${days[parseInt(wd)]}`);
+            }
+
+            if (parts.length === 1 && parts[0] === 'every minute') {
+                return 'Runs every minute';
+            }
+
+            return 'Runs ' + parts.join(', ');
+        }
+
+        function setPreset(preset) {
+            const parts = preset.split(' ');
+            document.getElementById('minute').value = parts[0];
+            document.getElementById('hour').value = parts[1];
+            document.getElementById('day').value = parts[2];
+            document.getElementById('month').value = parts[3];
+            document.getElementById('weekday').value = parts[4];
+            updateCron();
+        }
+
+        function loadExample(cronExpr, cmd) {
+            const parts = cronExpr.split(' ');
+            document.getElementById('minute').value = parts[0];
+            document.getElementById('hour').value = parts[1];
+            document.getElementById('day').value = parts[2];
+            document.getElementById('month').value = parts[3];
+            document.getElementById('weekday').value = parts[4];
+            document.getElementById('command').value = cmd;
+            updateCron();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyCron() {
+            const cronText = document.getElementById('cronOutput').textContent;
+            navigator.clipboard.writeText(cronText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#00cc6a';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('minute').value = '*';
+            document.getElementById('hour').value = '*';
+            document.getElementById('day').value = '*';
+            document.getElementById('month').value = '*';
+            document.getElementById('weekday').value = '*';
+            document.getElementById('command').value = '/usr/bin/backup.sh';
+            document.getElementById('output').value = '';
+            updateCron();
+        }
+
+        // Add event listeners
+        ['minute', 'hour', 'day', 'month', 'weekday', 'command', 'output'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateCron);
+            document.getElementById(id).addEventListener('change', updateCron);
+        });
+
+        // Initialize
+        updateCron();
+    </script>
+</body>
+</html>
