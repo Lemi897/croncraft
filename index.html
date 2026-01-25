@@ -19,6 +19,19 @@
             --warning: #ffb627;
         }
 
+        [data-theme="light"] {
+            --bg: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --accent: #00aa66;
+            --accent-dim: #008855;
+            --text: #1a1f3a;
+            --text-dim: #5a6589;
+            --border: #d0d7e8;
+            --error: #ff4d6d;
+            --warning: #ffb627;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -46,6 +59,30 @@
             text-align: center;
             margin-bottom: 3rem;
             animation: fadeInDown 0.6s ease-out;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
         }
 
         h1 {
@@ -139,6 +176,15 @@
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+
+        input.invalid {
+            border-color: var(--error);
+            background: rgba(255, 77, 109, 0.1);
+        }
+
+        input.invalid:focus {
+            box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.2);
         }
 
         .time-input {
@@ -369,12 +415,78 @@
             .preset-buttons {
                 grid-template-columns: 1fr;
             }
+
+            .theme-toggle {
+                position: static;
+                margin: 0 auto 1rem;
+            }
+        }
+
+        .saved-job-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .saved-job-item:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .saved-job-content {
+            flex: 1;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .saved-job-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-small:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-delete:hover {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .next-run-item {
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="themeIcon">☀️</span>
+                <span id="themeText">Light</span>
+            </button>
             <h1>CronCraft</h1>
             <p class="tagline">Build cron schedules visually. No more syntax headaches.</p>
         </header>
@@ -384,12 +496,25 @@
                 <h2>Quick Presets</h2>
                 <div class="preset-buttons">
                     <button class="btn-preset" onclick="setPreset('* * * * *')">Every Minute</button>
+                    <button class="btn-preset" onclick="setPreset('*/5 * * * *')">Every 5 Min</button>
+                    <button class="btn-preset" onclick="setPreset('*/30 * * * *')">Every 30 Min</button>
                     <button class="btn-preset" onclick="setPreset('0 * * * *')">Every Hour</button>
-                    <button class="btn-preset" onclick="setPreset('0 0 * * *')">Daily at Midnight</button>
-                    <button class="btn-preset" onclick="setPreset('0 9 * * *')">Daily at 9 AM</button>
-                    <button class="btn-preset" onclick="setPreset('0 0 * * 0')">Weekly (Sunday)</button>
-                    <button class="btn-preset" onclick="setPreset('0 0 1 * *')">Monthly (1st)</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 * * *')">Daily Midnight</button>
+                    <button class="btn-preset" onclick="setPreset('0 9 * * *')">Daily 9 AM</button>
+                    <button class="btn-preset" onclick="setPreset('0 9 * * 1-5')">Weekdays 9 AM</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 * * 0')">Weekly Sunday</button>
+                    <button class="btn-preset" onclick="setPreset('0 0 1 * *')">Monthly 1st</button>
                 </div>
+            </div>
+
+            <div class="card">
+                <h2>Import Existing</h2>
+                <div class="input-group">
+                    <label>Paste Cron Job</label>
+                    <input type="text" id="importCron" placeholder="0 2 * * * /path/to/script.sh">
+                    <div class="helper">Paste existing cron to auto-fill fields</div>
+                </div>
+                <button class="btn btn-secondary" onclick="importCron()" style="width: 100%; margin-top: 0.5rem;">Import</button>
             </div>
 
             <div class="card">
@@ -449,7 +574,23 @@
                 <div class="description" id="cronDescription">Runs every minute</div>
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="copyCron()">Copy to Clipboard</button>
+                    <button class="btn btn-secondary" onclick="downloadCron()">Download</button>
+                    <button class="btn btn-secondary" onclick="saveCron()">Save Job</button>
                     <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Next Run Times</h2>
+                <div id="nextRuns" style="color: var(--text-dim); font-size: 0.95rem;">
+                    <div style="padding: 1rem; text-align: center;">Build a cron job to see next runs</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Saved Jobs</h2>
+                <div id="savedJobs" style="min-height: 100px;">
+                    <div style="padding: 1rem; text-align: center; color: var(--text-dim);">No saved jobs yet</div>
                 </div>
             </div>
         </div>
@@ -481,6 +622,52 @@
     </div>
 
     <script>
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '🌙' : '☀️';
+            document.getElementById('themeText').textContent = newTheme === 'light' ? 'Dark' : 'Light';
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+            document.getElementById('themeText').textContent = savedTheme === 'light' ? 'Dark' : 'Light';
+        }
+
+        // Input validation
+        function validateInput(input, min, max) {
+            const value = input.value.trim();
+            
+            if (value === '' || value === '*') {
+                input.classList.remove('invalid');
+                return true;
+            }
+
+            // Handle ranges like */5 or 1-5
+            if (value.includes('*/') || value.includes('-') || value.includes(',')) {
+                input.classList.remove('invalid');
+                return true;
+            }
+
+            const num = parseInt(value);
+            if (isNaN(num) || num < min || num > max) {
+                input.classList.add('invalid');
+                return false;
+            }
+
+            input.classList.remove('invalid');
+            return true;
+        }
+
         function updateCron() {
             const minute = document.getElementById('minute').value || '*';
             const hour = document.getElementById('hour').value || '*';
@@ -490,11 +677,20 @@
             const command = document.getElementById('command').value || '/usr/bin/backup.sh';
             const output = document.getElementById('output').value;
 
+            // Validate inputs
+            validateInput(document.getElementById('minute'), 0, 59);
+            validateInput(document.getElementById('hour'), 0, 23);
+            validateInput(document.getElementById('day'), 1, 31);
+            validateInput(document.getElementById('month'), 1, 12);
+            validateInput(document.getElementById('weekday'), 0, 7);
+
             const cronExpression = `${minute} ${hour} ${day} ${month} ${weekday} ${command}${output}`;
             document.getElementById('cronOutput').textContent = cronExpression;
 
             const description = generateDescription(minute, hour, day, month, weekday);
             document.getElementById('cronDescription').textContent = description;
+
+            updateNextRuns(minute, hour, day, month, weekday);
         }
 
         function generateDescription(min, hr, d, mon, wd) {
@@ -524,9 +720,11 @@
             }
 
             // Weekday
-            if (wd !== '*') {
+            if (wd !== '*' && !wd.includes('-')) {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                 parts.push(`on ${days[parseInt(wd)]}`);
+            } else if (wd === '1-5') {
+                parts.push('on weekdays');
             }
 
             if (parts.length === 1 && parts[0] === 'every minute') {
@@ -534,6 +732,72 @@
             }
 
             return 'Runs ' + parts.join(', ');
+        }
+
+        // Calculate next run times
+        function updateNextRuns(min, hr, d, mon, wd) {
+            const nextRuns = calculateNextRuns(min, hr, d, mon, wd, 5);
+            const container = document.getElementById('nextRuns');
+            
+            if (nextRuns.length === 0) {
+                container.innerHTML = '<div style="padding: 1rem; text-align: center;">Unable to calculate next runs</div>';
+                return;
+            }
+
+            container.innerHTML = nextRuns.map(time => 
+                `<div class="next-run-item">${time.toLocaleString()}</div>`
+            ).join('');
+        }
+
+        function calculateNextRuns(min, hr, d, mon, wd, count) {
+            const runs = [];
+            let current = new Date();
+            current.setSeconds(0);
+            current.setMilliseconds(0);
+
+            // Simple calculation for common cases
+            for (let i = 0; i < 100 && runs.length < count; i++) {
+                current = new Date(current.getTime() + 60000); // Add 1 minute
+
+                if (!matchesCron(current, min, hr, d, mon, wd)) continue;
+                runs.push(new Date(current));
+            }
+
+            return runs;
+        }
+
+        function matchesCron(date, min, hr, d, mon, wd) {
+            // Check minute
+            if (min !== '*' && !min.startsWith('*/')) {
+                if (parseInt(min) !== date.getMinutes()) return false;
+            } else if (min.startsWith('*/')) {
+                const interval = parseInt(min.slice(2));
+                if (date.getMinutes() % interval !== 0) return false;
+            }
+
+            // Check hour
+            if (hr !== '*' && !hr.startsWith('*/')) {
+                if (parseInt(hr) !== date.getHours()) return false;
+            } else if (hr.startsWith('*/')) {
+                const interval = parseInt(hr.slice(2));
+                if (date.getHours() % interval !== 0) return false;
+            }
+
+            // Check day of month
+            if (d !== '*' && parseInt(d) !== date.getDate()) return false;
+
+            // Check month
+            if (mon !== '*' && parseInt(mon) !== date.getMonth() + 1) return false;
+
+            // Check day of week
+            if (wd !== '*' && !wd.includes('-')) {
+                if (parseInt(wd) !== date.getDay()) return false;
+            } else if (wd === '1-5') {
+                const day = date.getDay();
+                if (day === 0 || day === 6) return false;
+            }
+
+            return true;
         }
 
         function setPreset(preset) {
@@ -558,6 +822,30 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Import existing cron job
+        function importCron() {
+            const cronInput = document.getElementById('importCron').value.trim();
+            if (!cronInput) return;
+
+            const parts = cronInput.split(/\s+/);
+            if (parts.length < 6) {
+                alert('Invalid cron format. Expected: MIN HR DAY MON DOW COMMAND');
+                return;
+            }
+
+            document.getElementById('minute').value = parts[0];
+            document.getElementById('hour').value = parts[1];
+            document.getElementById('day').value = parts[2];
+            document.getElementById('month').value = parts[3];
+            document.getElementById('weekday').value = parts[4];
+            document.getElementById('command').value = parts.slice(5).join(' ');
+            
+            updateCron();
+            document.getElementById('importCron').value = '';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function copyCron() {
             const cronText = document.getElementById('cronOutput').textContent;
             navigator.clipboard.writeText(cronText).then(() => {
@@ -570,6 +858,85 @@
                     btn.style.background = '';
                 }, 2000);
             });
+        }
+
+        // Download cron job as file
+        function downloadCron() {
+            const cronText = document.getElementById('cronOutput').textContent;
+            const blob = new Blob([cronText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cronjob.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Save/load jobs from localStorage
+        function saveCron() {
+            const cronText = document.getElementById('cronOutput').textContent;
+            const jobs = JSON.parse(localStorage.getItem('savedCronJobs') || '[]');
+            
+            if (!jobs.includes(cronText)) {
+                jobs.push(cronText);
+                localStorage.setItem('savedCronJobs', JSON.stringify(jobs));
+                loadSavedJobs();
+                
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Saved!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            } else {
+                alert('This job is already saved!');
+            }
+        }
+
+        function loadSavedJobs() {
+            const jobs = JSON.parse(localStorage.getItem('savedCronJobs') || '[]');
+            const container = document.getElementById('savedJobs');
+            
+            if (jobs.length === 0) {
+                container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-dim);">No saved jobs yet</div>';
+                return;
+            }
+
+            container.innerHTML = jobs.map((job, index) => `
+                <div class="saved-job-item">
+                    <div class="saved-job-content">${job}</div>
+                    <div class="saved-job-actions">
+                        <button class="btn-small" onclick="loadSavedJob(${index})">Load</button>
+                        <button class="btn-small btn-delete" onclick="deleteSavedJob(${index})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadSavedJob(index) {
+            const jobs = JSON.parse(localStorage.getItem('savedCronJobs') || '[]');
+            const job = jobs[index];
+            if (!job) return;
+
+            const parts = job.split(/\s+/);
+            document.getElementById('minute').value = parts[0];
+            document.getElementById('hour').value = parts[1];
+            document.getElementById('day').value = parts[2];
+            document.getElementById('month').value = parts[3];
+            document.getElementById('weekday').value = parts[4];
+            document.getElementById('command').value = parts.slice(5).join(' ');
+            
+            updateCron();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteSavedJob(index) {
+            const jobs = JSON.parse(localStorage.getItem('savedCronJobs') || '[]');
+            jobs.splice(index, 1);
+            localStorage.setItem('savedCronJobs', JSON.stringify(jobs));
+            loadSavedJobs();
         }
 
         function resetForm() {
@@ -589,7 +956,14 @@
             document.getElementById(id).addEventListener('change', updateCron);
         });
 
+        // Allow Enter key to import
+        document.getElementById('importCron').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') importCron();
+        });
+
         // Initialize
+        loadTheme();
+        loadSavedJobs();
         updateCron();
     </script>
 </body>
