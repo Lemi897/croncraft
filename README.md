@@ -29,7 +29,7 @@ Just open the website and start building! No installation needed.
 
 **Or run locally:**
 ```bash
-git clone https://github.com/lemii897/croncraft.git
+git clone https://github.com/Lemi897/croncraft.git
 cd croncraft
 open index.html  # Or just double-click the file
 ```
@@ -123,7 +123,7 @@ MIT License - feel free to use this project however you want!
 
 If this tool saved you time, give it a star! ⭐
 
-Found a bug or have a suggestion? [Open an issue](https://github.com/lemii897/croncraft/issues)
+Found a bug or have a suggestion? [Open an issue](https://github.com/Lemi897/croncraft/issues)
 
 ## 📬 Contact
 
